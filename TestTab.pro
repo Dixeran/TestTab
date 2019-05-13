@@ -39,7 +39,6 @@ FORMS += \
 
 win32: LIBS += -lUser32
 
-DISTFILES += \
-    TabView.qml
+DISTFILES +=
 
 win32: LIBS += -lkernel32
