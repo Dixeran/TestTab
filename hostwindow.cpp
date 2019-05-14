@@ -132,7 +132,14 @@ void HostWindow::CatchWindow(HWND windowHandle)
     if(windowHandle == nullptr) exit(1);
     WindowWraper* newTab = new WindowWraper(windowHandle);
     tabs.push_back(newTab);
-    tabBar->addTab("my computer");
+    // get window Title
+    int titleLength = GetWindowTextLength(windowHandle) + 1; // including "\0"
+    wchar_t* title = new wchar_t[titleLength];
+    GetWindowText(windowHandle, title, titleLength);
+    QString titleQ = QString::fromWCharArray(title, titleLength);
+    delete[] title;
+    title = nullptr;
+    tabBar->addTab(titleQ);
     tabBar->setCurrentIndex(tabs.length() - 1);
 }
 
