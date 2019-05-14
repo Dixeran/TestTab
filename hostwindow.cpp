@@ -8,6 +8,8 @@
 #include <QDebug>
 HostWindow::HostWindow(QWidget *parent) : QMainWindow(parent), timer(QDateTime::currentSecsSinceEpoch())
 {
+    hostInstance = this;
+
     // restore last pos/size
     QSettings setting("TabSoft", "TestTab");
     if(setting.contains("hostwindow/size")){
@@ -110,11 +112,17 @@ HostWindow::HostWindow(QWidget *parent) : QMainWindow(parent), timer(QDateTime::
 
 void HostWindow::closeEvent(QCloseEvent *event)
 {
+    hostInstance = nullptr;
     tabContentContianer->DeleteWidget();
     for(auto i = tabs.begin(); i != tabs.end(); i++)
     {
         delete (*i);
     }
+
+    for (auto i = hooks.begin(); i != hooks.end(); i++) {
+        UnhookWinEvent((*i).titleHook);
+    }
+
     qDebug() << "destroy";
 
     if(!isMinimized() && !isMaximized()){
@@ -127,7 +135,15 @@ void HostWindow::closeEvent(QCloseEvent *event)
     event->accept();
 }
 
-void HostWindow::CatchWindow(HWND windowHandle)
+void CALLBACK HandleWinEventName(HWINEVENTHOOK hook, DWORD event, HWND hwnd,
+                             LONG idObject, LONG idChild,
+                             DWORD dwEventThread, DWORD dwmsEventTime)
+{
+    if(hostInstance == nullptr || hwnd == nullptr) return;
+    hostInstance->notifyTitleChanged(hwnd);
+}
+
+void HostWindow::CatchWindow(HWND windowHandle, DWORD pId)
 {
     if(windowHandle == nullptr) exit(1);
     WindowWraper* newTab = new WindowWraper(windowHandle);
@@ -141,7 +157,22 @@ void HostWindow::CatchWindow(HWND windowHandle)
     title = nullptr;
     tabBar->addTab(titleQ);
     tabBar->setCurrentIndex(tabs.length() - 1);
+
+    // TODO: hook window event
+    if(pId != 0 && !hooks.contains(pId)){
+        qDebug() << "try to hook title..";
+        HWINEVENTHOOK titlehook = SetWinEventHook(
+                    EVENT_OBJECT_NAMECHANGE,
+                    EVENT_OBJECT_NAMECHANGE,
+                    nullptr,
+                    HandleWinEventName,
+                    pId,
+                    0,
+                    WINEVENT_OUTOFCONTEXT);
+        hooks.insert(pId, HookPair(titlehook));
+    }
 }
+
 
 BOOL CALLBACK EnumWindowsProcs(HWND hWnd,LPARAM lParam)
 {
@@ -159,7 +190,7 @@ BOOL CALLBACK EnumWindowsProcs(HWND hWnd,LPARAM lParam)
         GetWindowThreadProcessId(hWnd, &pId);
         if(arg->target.contains(pId)){
             qDebug() << "Get you!" << pId << "/" << hWnd;
-            arg->callee->CatchWindow(hWnd);
+            arg->callee->CatchWindow(hWnd, pId);
             arg->finded = true;
             return false; // stop enum
         }
@@ -227,5 +258,22 @@ bool HostWindow::AddExplorer()
         qDebug() << GetLastError();
         qDebug() << SEI.hInstApp;
         return false;
+    }
+}
+
+void HostWindow::notifyTitleChanged(HWND changedWindow)
+{
+    qDebug() << "get notified title changed " << changedWindow;
+    for (auto i = 0; i < tabs.length(); i++) {
+        if(tabs[i]->GetWindowHandle() == changedWindow){
+            int titleLength = GetWindowTextLength(changedWindow) + 1; // including "\0"
+            wchar_t* title = new wchar_t[titleLength];
+            GetWindowText(changedWindow, title, titleLength);
+            QString titleQ = QString::fromWCharArray(title, titleLength);
+            delete[] title;
+            title = nullptr;
+
+            tabBar->setTabText(i, titleQ);
+        }
     }
 }

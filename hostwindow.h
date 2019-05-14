@@ -8,11 +8,21 @@
 #include <QVBoxLayout>
 #include <QHBoxLayout>
 #include <QList>
+#include <QMap>
 #include <QPushButton>
 #include <Windows.h>
 #include <processthreadsapi.h>
 #include "widgetcontainer.h"
 #include "windowwraper.h"
+
+typedef struct HookPair{
+    HWINEVENTHOOK titleHook;
+//    HWINEVENTHOOK iconHook;
+    HookPair(HWINEVENTHOOK _titleHook)
+    {
+        titleHook = _titleHook;
+    }
+} HookPair;
 
 class HostWindow : public QMainWindow
 {
@@ -30,16 +40,19 @@ class HostWindow : public QMainWindow
 
     QList<WindowWraper*> tabs; // opened tabs
 
+    QMap<DWORD, HookPair> hooks;// process that set event hook
+
     //timer to get explorer window
     qint64 timer;
 
 public:
     explicit HostWindow(QWidget *parent = nullptr);
     void closeEvent(QCloseEvent *event) override;
-    void CatchWindow(HWND windowHandle);
+    void CatchWindow(HWND windowHandle, DWORD pId = 0);
 
-    // functions to add a explorer
-    bool AddExplorer();
+    bool AddExplorer(); // functions to add a explorer
+
+    void notifyTitleChanged(HWND changedWindow);
 signals:
 
 public slots:
@@ -50,5 +63,7 @@ typedef struct {
     QList<DWORD> target;
     bool finded;
 } EnumArg;
+
+static HostWindow* hostInstance = nullptr;
 
 #endif // HOSTWINDOW_H
