@@ -148,10 +148,9 @@ BOOL CALLBACK EnumWindowsProcs(HWND hWnd,LPARAM lParam)
             wcscmp(targetClassName, className) == 0;
 
     if(isValid){
-        DWORD targetId = arg->target;
         DWORD pId;
         GetWindowThreadProcessId(hWnd, &pId);
-        if(targetId == pId){
+        if(arg->target.contains(pId)){
             qDebug() << "Get you!" << pId << "/" << hWnd;
             arg->callee->CatchWindow(hWnd);
             arg->finded = true;
