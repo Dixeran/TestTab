@@ -169,43 +169,43 @@ bool HostWindow::AddExplorer()
     SEI.cbSize = sizeof (SHELLEXECUTEINFO);
     SEI.fMask = SEE_MASK_NOCLOSEPROCESS;
     SEI.lpVerb = L"open";
-    SEI.lpFile = L"explorer.exe";
+    SEI.lpFile = L"explorer.exe"; // Open an Explorer window at the 'Computer'
+    SEI.lpParameters = L",";
     SEI.lpDirectory = nullptr;
     SEI.nShow = SW_SHOWDEFAULT;
     SEI.hInstApp = nullptr;
 
     if(ShellExecuteEx(&SEI)){
-        DWORD targetId = NULL; // target process (explorer.exe) id
+        EnumArg* arg = new EnumArg();
+        arg->callee = this;
+        arg->finded = false;
         PROCESSENTRY32 entry;
         entry.dwSize = sizeof (PROCESSENTRY32);
 
-        HANDLE snapshot = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, NULL);
-        if(Process32First(snapshot, &entry)){
-            while(Process32Next(snapshot, &entry)){
-                qDebug() << entry.szExeFile;
-                if(wcscmp(entry.szExeFile, L"explorer.exe") == 0){
-                    targetId = entry.th32ProcessID;
-                    break;
-                }
-            }
-        }
-
-        if(targetId == NULL){
-            // shellExecute success
-            // but not found target porcess
-            return false;
-        }
-
-        EnumArg* arg = new EnumArg();
-        arg->callee = this;
-        arg->target = targetId;
-        arg->finded = false;
-        qDebug() << "exec explorer" << arg->target;
-
         timer = QDateTime::currentSecsSinceEpoch();
         while(QDateTime::currentSecsSinceEpoch() - timer < 5){
+            arg->target.clear();
+            HANDLE snapshot = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, NULL);
+            if(Process32First(snapshot, &entry)){
+                while(Process32Next(snapshot, &entry)){
+                    if(wcscmp(entry.szExeFile, L"explorer.exe") == 0){
+                        arg->target.push_back(entry.th32ProcessID);
+                    }
+                }
+            }
+
+            if(arg->target.length() == 0){
+                // shellExecute success
+                // but not found target porcess
+                return false;
+            }
+
+            qDebug() << "exec explorer" << arg->target;
+
             // 5 seconds timeout
             if(!EnumWindows(&EnumWindowsProcs, reinterpret_cast<LPARAM>(arg))){
+                delete arg;
+                arg = nullptr;
                 DWORD error = GetLastError();
                 if(error){
                     qDebug() << "enum window: result" << error;
