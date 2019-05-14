@@ -80,11 +80,11 @@ HostWindow::HostWindow(QWidget *parent) : QMainWindow(parent), timer(QDateTime::
                 tabBar,
                 &QTabBar::tabCloseRequested,
                 [this](int index){
-        // TODO: delete window wrapper
         qDebug() << "request close" << index;
         tabs.removeAt(index);
-        delete tabContentContianer->DeleteWidget();
         tabBar->removeTab(index);
+        if(index == tabBar->currentIndex())
+            delete tabContentContianer->DeleteWidget();
 
         if(tabs.length() == 0) QApplication::quit();
     });

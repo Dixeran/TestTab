@@ -47,7 +47,7 @@ public slots:
 
 typedef struct {
     HostWindow* callee;
-    DWORD target;
+    QList<DWORD> target;
     bool finded;
 } EnumArg;
 
