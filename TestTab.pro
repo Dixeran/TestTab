@@ -37,6 +37,8 @@ HEADERS += \
 FORMS += \
         mainwindow.ui
 
+win32: RC_ICONS += icon.ico
+
 win32: LIBS += -lUser32
 
 DISTFILES +=
