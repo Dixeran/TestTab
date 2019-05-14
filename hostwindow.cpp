@@ -4,10 +4,25 @@
 #include <QDateTime>
 #include <tchar.h>
 #include <QApplication>
+#include <QSettings>
 #include <QDebug>
 HostWindow::HostWindow(QWidget *parent) : QMainWindow(parent), timer(QDateTime::currentSecsSinceEpoch())
 {
-    this->resize(800, 400);
+    // restore last pos/size
+    QSettings setting("TabSoft", "TestTab");
+    if(setting.contains("hostwindow/size")){
+        qDebug() << "restore last size..";
+        QSize lastSize = setting.value("hostwindow/size").toSize();
+        this->resize(lastSize);
+    }
+    else
+        this->resize(800, 400);
+
+    if(setting.contains("hostwindow/pos")){
+        QPoint lastPos = setting.value("hostwindow/pos").toPoint();
+        this->move(lastPos);
+    }
+
     // init components
     {
         replaceContainer = new QWidget(this);
@@ -101,6 +116,14 @@ void HostWindow::closeEvent(QCloseEvent *event)
         delete (*i);
     }
     qDebug() << "destroy";
+
+    if(!isMinimized() && !isMaximized()){
+        // save pos/size
+        QSettings setting("TabSoft", "TestTab");
+        setting.setValue("hostwindow/size", this->size());
+        setting.setValue("hostwindow/pos", this->pos());
+    }
+
     event->accept();
 }
 
