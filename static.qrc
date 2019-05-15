@@ -1,0 +1,5 @@
+<RCC>
+    <qresource prefix="/img">
+        <file>icons8-plus-math-40.png</file>
+    </qresource>
+</RCC>

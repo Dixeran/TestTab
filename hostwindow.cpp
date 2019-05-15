@@ -5,6 +5,7 @@
 #include <tchar.h>
 #include <QApplication>
 #include <QSettings>
+#include <QFont>
 #include <QDebug>
 HostWindow::HostWindow(QWidget *parent) : QMainWindow(parent), timer(QDateTime::currentSecsSinceEpoch())
 {
@@ -48,11 +49,16 @@ HostWindow::HostWindow(QWidget *parent) : QMainWindow(parent), timer(QDateTime::
                               "height: 40px;"
                               "}");
         tabBar->setExpanding(false);
+        QFont font;
+        font.setFamily("Microsoft Yahei");
+        tabBar->setFont(font);
         tabLayout->addWidget(tabBar);
 
         //init button
         addTabButton = new QPushButton(this);
-        addTabButton->setText("+");
+        addTabButton->setIcon(QIcon(":/img/icons8-plus-math-40.png"));
+        addTabButton->setIconSize(QSize(30, 30));
+        addTabButton->setFlat(true);
         addTabButton->setMinimumSize(QSize(40, 40));
         addTabButton->setMaximumSize(QSize(40, 40));
         tabLayout->addWidget(addTabButton);

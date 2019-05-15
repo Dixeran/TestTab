@@ -44,3 +44,6 @@ win32: LIBS += -lUser32
 DISTFILES +=
 
 win32: LIBS += -lkernel32
+
+RESOURCES += \
+    static.qrc
