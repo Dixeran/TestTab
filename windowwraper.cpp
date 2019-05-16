@@ -17,7 +17,7 @@ WindowWraper::~WindowWraper()
 {
     SetParent(this->currentWindow, nullptr);
     PostMessage(currentWindow, WM_CLOSE, 0, 0); // close window nicely
-    qDebug() << "destrop wrapper";
+    qDebug() << "destroy wrapper";
 }
 
 void WindowWraper::resizeEvent(QResizeEvent *ev)
