@@ -14,6 +14,7 @@
 #include <processthreadsapi.h>
 #include "widgetcontainer.h"
 #include "windowwraper.h"
+#include "mytabbar.h"
 
 typedef struct HookPair{
     HWINEVENTHOOK titleHook;
@@ -30,7 +31,7 @@ class HostWindow : public QMainWindow
     QVBoxLayout* verticalLayout; // mainLayout
 
     QHBoxLayout* tabLayout; // container of tabBar & addTabButton
-    QTabBar* tabBar;
+    MyTabBar* tabBar;
     QPushButton* addTabButton;
     QWidget* tabWidget; // wrapper for tabLayout
 
@@ -50,7 +51,7 @@ public:
     void closeEvent(QCloseEvent *event) override;
     void CatchWindow(HWND windowHandle, DWORD pId = 0);
 
-    bool AddExplorer(); // functions to add a explorer
+    bool AddExplorer(QString path = ""); // functions to add a explorer
 
     void notifyTitleChanged(HWND changedWindow);
 signals:

@@ -26,11 +26,13 @@ DEFINES += QT_DEPRECATED_WARNINGS
 SOURCES += \
         hostwindow.cpp \
         main.cpp \
+        mytabbar.cpp \
         widgetcontainer.cpp \
         windowwraper.cpp
 
 HEADERS += \
         hostwindow.h \
+        mytabbar.h \
         widgetcontainer.h \
         windowwraper.h
 

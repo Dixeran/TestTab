@@ -42,16 +42,7 @@ HostWindow::HostWindow(QWidget *parent) : QMainWindow(parent), timer(QDateTime::
         tabLayout->setMargin(0);
 
         // init tabBar
-        tabBar = new QTabBar(this);
-        tabBar->setTabsClosable(true);
-//        tabBar->setMovable(true);
-        tabBar->setStyleSheet("QTabBar::tab { "
-                              "height: 40px;"
-                              "}");
-        tabBar->setExpanding(false);
-        QFont font;
-        font.setFamily("Microsoft Yahei");
-        tabBar->setFont(font);
+        tabBar = new MyTabBar(this);
         tabLayout->addWidget(tabBar);
 
         //init button
@@ -105,6 +96,14 @@ HostWindow::HostWindow(QWidget *parent) : QMainWindow(parent), timer(QDateTime::
         qDebug() << "set current tab" << index;
         if(index >= 0)
             tabContentContianer->SetWidget(tabs[index]);
+    });
+
+    //drag&drop event
+    QObject::connect(
+                tabBar,
+                &MyTabBar::newTab,
+                [this](QString path){
+       this->AddExplorer(path);
     });
 
     // addTab event
@@ -164,7 +163,7 @@ void HostWindow::CatchWindow(HWND windowHandle, DWORD pId)
     tabBar->addTab(titleQ);
     tabBar->setCurrentIndex(tabs.length() - 1);
 
-    // TODO: hook window event
+    // TODO: hook window icon event
     if(pId != 0 && !hooks.contains(pId)){
         qDebug() << "try to hook title..";
         HWINEVENTHOOK titlehook = SetWinEventHook(
@@ -205,17 +204,27 @@ BOOL CALLBACK EnumWindowsProcs(HWND hWnd,LPARAM lParam)
     return true; // continue
 }
 
-bool HostWindow::AddExplorer()
+bool HostWindow::AddExplorer(QString path)
 {
     // execute explorer
     SHELLEXECUTEINFO SEI = {0};
     SEI.cbSize = sizeof (SHELLEXECUTEINFO);
     SEI.fMask = SEE_MASK_NOCLOSEPROCESS;
-    SEI.lpVerb = L"open";
+    SEI.lpVerb = NULL;
     SEI.lpFile = L"explorer.exe"; // Open an Explorer window at the 'Computer'
-    SEI.lpParameters = L",";
+    SEI.lpParameters = L","; // default path
+    if(path != ""){
+        path = path.right(path.length() - 8); // cut prefix file:///
+        path.replace("/", "\\");
+        path.push_front("/root,");
+        wchar_t* path_w = new wchar_t[path.length() + 1];
+        path_w[path.length()] = L'\0';
+        SEI.lpParameters = path_w;
+    }
+
+
     SEI.lpDirectory = nullptr;
-    SEI.nShow = SW_SHOWDEFAULT;
+    SEI.nShow = SW_MINIMIZE; // don't popup
     SEI.hInstApp = nullptr;
 
     if(ShellExecuteEx(&SEI)){
