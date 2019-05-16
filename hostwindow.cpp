@@ -218,6 +218,7 @@ bool HostWindow::AddExplorer(QString path)
         path.replace("/", "\\");
         path.push_front("/root,");
         wchar_t* path_w = new wchar_t[path.length() + 1];
+        path.toWCharArray(path_w);
         path_w[path.length()] = L'\0';
         SEI.lpParameters = path_w;
     }
